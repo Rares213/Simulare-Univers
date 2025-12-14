@@ -1,0 +1,105 @@
+#version 460 core
+
+#define LOCAL_SIZE_X 64
+layout (local_size_x = LOCAL_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout (std430, binding = 0) buffer ff_struct
+{
+	float dt;
+};
+
+///////////////POSITION///////////////
+
+layout(std430, binding = 1) buffer pos_x
+{
+	float x[];
+};
+
+layout(std430, binding = 2) buffer pos_y
+{
+	float y[];
+};
+
+layout(std430, binding = 3) buffer pos_z
+{
+	float z[];
+};
+
+///////////////VECLOCITY///////////////
+
+layout(std430, binding = 4) buffer v_x
+{
+	float vx[];
+};
+
+layout(std430, binding = 5) buffer v_y
+{
+	float vy[];
+};
+
+layout(std430, binding = 6) buffer v_z
+{
+	float vz[];
+};
+
+///////////////ACCELERATION///////////////
+
+layout(std430, binding = 7) buffer a_x
+{
+	float ax[];
+};
+
+layout(std430, binding = 8) buffer a_y
+{
+	float ay[];
+};
+
+layout(std430, binding = 9) buffer a_z
+{
+	float az[];
+};
+
+///////////////FORCE///////////////
+
+layout(std430, binding = 10) buffer f_x
+{
+	float fx[];
+};
+
+layout(std430, binding = 11) buffer f_y
+{
+	float fy[];
+};
+
+layout(std430, binding = 12) buffer f_z
+{
+	float fz[];
+};
+
+layout(std430, binding = 13) buffer mass
+{
+	float m[];
+};
+
+void main()
+{
+	uint id = gl_GlobalInvocationID.x;
+
+	const float c_m = m[id];
+	const float c_ax = fx[id] / c_m;
+	const float c_ay = fy[id] / c_m;
+	const float c_az = fz[id] / c_m;
+	const float c_dt = dt;
+
+	ax[id] = c_ax;
+	ay[id] = c_ay;
+	az[id] = c_az;
+
+	vx[id] = vx[id] + c_dt * ax[id];
+	vy[id] = vy[id] + c_dt * ay[id];
+	vz[id] = vz[id] + c_dt * az[id];
+
+	x[id] = x[id] + c_dt * vx[id];
+	y[id] = y[id] + c_dt * vy[id];
+	z[id] = z[id] + c_dt * vz[id];
+}

@@ -1,0 +1,97 @@
+#version 460 core
+
+#define LOCAL_SIZE_X 64
+layout (local_size_x = LOCAL_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout (std430, binding = 0) buffer ff_struct
+{
+    float G;
+    float soft;
+    uint number_bodies;
+};
+
+///////////////POSITION///////////////
+
+layout(std430, binding = 1) buffer pos_x
+{
+	float x[];
+};
+
+layout(std430, binding = 2) buffer pos_y
+{
+	float y[];
+};
+
+layout(std430, binding = 3) buffer pos_z
+{
+	float z[];
+};
+
+///////////////FORCE///////////////
+
+layout(std430, binding = 4) buffer f_x
+{
+	float fx[];
+};
+
+layout(std430, binding = 5) buffer f_y
+{
+	float fy[];
+};
+
+layout(std430, binding = 6) buffer f_z
+{
+	float fz[];
+};
+
+///////////////MASS///////////////
+
+layout(std430, binding = 7) buffer mass
+{
+	float m[];
+};
+
+float pow2(float x)
+{
+	return x * x;
+}
+
+
+void main()
+{
+	float d;
+
+	const uint id = gl_GlobalInvocationID.x;
+
+	const float c_x = x[id];
+	const float c_y = y[id];
+	const float c_z = z[id];
+	const float c_m = m[id];
+	const float c_G = G;
+	const float c_soft = soft;
+	const uint c_number_bodies = number_bodies;
+	
+	float c_fx = 0;
+	float c_fy = 0;
+	float c_fz = 0;
+
+	for(uint i = 0;i < c_number_bodies; i++)
+	{
+		const float l_x = x[i];
+		const float l_y = y[i];
+		const float l_z = z[i];
+		const float l_m = m[i];
+		
+		d = pow2(c_x - l_x) + pow2(c_y - l_y) + pow2(c_z - l_z) + c_soft;
+		d = d * sqrt(d);
+
+		const float prod = -c_G * c_m * l_m / d;
+		c_fx +=  prod * (c_x - l_x);
+		c_fy +=  prod * (c_y - l_y);
+		c_fz +=  prod * (c_z - l_z);
+	}
+
+	fx[id] = c_fx;
+	fy[id] = c_fy;
+	fz[id] = c_fz;
+}

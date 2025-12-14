@@ -1,0 +1,56 @@
+// computes the acceleration
+
+#version 460 core
+
+#define LOCAL_SIZE_X 64
+layout (local_size_x = LOCAL_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+///////////////ACCELERATION///////////////
+
+layout(std430, binding = 0) buffer a_x
+{
+	float ax[];
+};
+
+layout(std430, binding = 1) buffer a_y
+{
+	float ay[];
+};
+
+layout(std430, binding = 2) buffer a_z
+{
+	float az[];
+};
+
+///////////////FORCE///////////////
+
+layout(std430, binding = 3) buffer f_x
+{
+	float fx[];
+};
+
+layout(std430, binding = 4) buffer f_y
+{
+	float fy[];
+};
+
+layout(std430, binding = 5) buffer f_z
+{
+	float fz[];
+};
+
+layout(std430, binding = 6) buffer mass
+{
+	float m[];
+};
+
+void main()
+{
+	const uint id = gl_GlobalInvocationID.x;
+
+	const float c_m = m[id];
+
+	ax[id] = fx[id] / c_m;
+	ay[id] = fy[id] / c_m;
+	az[id] = fz[id] / c_m;
+}
